@@ -25,8 +25,6 @@ export default function DishFormScreen({ route, navigation }) {
   const [errors, setErrors] = useState({});
   const [images, setImages] = useState([]);
   const [newImageUrl, setNewImageUrl] = useState('');
-
-  // State cho Modal Xóa
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
@@ -117,7 +115,8 @@ export default function DishFormScreen({ route, navigation }) {
       setShowDeleteConfirm(false);
       navigation.goBack();
     } catch(e) {
-      Alert.alert('Lỗi', 'Không thể xóa');
+      // Đã dịch thông báo lỗi
+      Alert.alert(t('error'), t('cannot_delete') || 'Cannot delete'); 
     }
   };
 
@@ -126,33 +125,35 @@ export default function DishFormScreen({ route, navigation }) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
       <Text style={styles.label}>{t('name')}</Text>
-      <TextInput style={styles.input} value={form[f('Name')]} onChangeText={(v) => setField(f('Name'), v)} placeholder={t('name')} />
+      <TextInput style={styles.input} value={form[f('Name')]} onChangeText={(v) => setField(f('Name'), v)} placeholder={t('name')} placeholderTextColor="#999" />
       {renderError(f('Name'))}
 
-      <View style={{ flexDirection: 'row', gap: 10 }}>
-        <View style={{ flex: 1 }}>
+      {/* Sửa gap thành marginRight */}
+      <View style={{ flexDirection: 'row', marginTop: 4 }}>
+        <View style={{ flex: 1, marginRight: 10 }}>
           <Text style={styles.label}>{t('price')}</Text>
-          <TextInput style={styles.input} keyboardType="numeric" value={String(form[f('Price')])} onChangeText={(v) => setField(f('Price'), v)} placeholder="0" />
+          <TextInput style={styles.input} keyboardType="numeric" value={String(form[f('Price')])} onChangeText={(v) => setField(f('Price'), v)} placeholder="0" placeholderTextColor="#999" />
           {renderError(f('Price'))}
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.label}>{t('prep_time')}</Text>
-          <TextInput style={styles.input} keyboardType="numeric" value={String(form[f('PreparationTime')])} onChangeText={(v) => setField(f('PreparationTime'), v)} placeholder="0" />
+          <TextInput style={styles.input} keyboardType="numeric" value={String(form[f('PreparationTime')])} onChangeText={(v) => setField(f('PreparationTime'), v)} placeholder="0" placeholderTextColor="#999" />
           {renderError(f('PreparationTime'))}
         </View>
       </View>
 
       <Text style={styles.label}>{t('description')}</Text>
-      <TextInput style={[styles.input, { height: 70 }]} multiline value={form[f('Description')]} onChangeText={(v) => setField(f('Description'), v)} />
+      <TextInput style={[styles.input, { height: 80 }]} multiline value={form[f('Description')]} onChangeText={(v) => setField(f('Description'), v)} placeholderTextColor="#999" />
 
       <Text style={styles.label}>{t('category')}</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+      {/* Sửa gap thành marginRight và marginBottom */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
         {categories.map((c) => {
           const cid = c[f('DishCategoryId')];
           const active = form[f('DishCategoryId')] === cid;
           return (
-            <TouchableOpacity key={cid} style={[styles.chip, active && styles.chipActive]} onPress={() => setField(f('DishCategoryId'), cid)}>
-              <Text style={{ color: active ? '#fff' : '#333' }}>
+            <TouchableOpacity key={cid} style={[styles.chip, active && styles.chipActive, { marginRight: 8, marginBottom: 8 }]} onPress={() => setField(f('DishCategoryId'), cid)}>
+              <Text style={{ color: active ? '#fff' : '#555', fontWeight: '500' }}>
                 {cid === 1 ? t('cat_main') : cid === 2 ? t('cat_drink') : cid === 3 ? t('cat_dessert') : c[f('Name')]}
               </Text>
             </TouchableOpacity>
@@ -166,20 +167,20 @@ export default function DishFormScreen({ route, navigation }) {
         <Switch value={!!form[f('IsAvailable')]} onValueChange={(v) => setField(f('IsAvailable'), v)} />
       </View>
 
-      <Text style={styles.label}>--- {t('images')} ---</Text>
+      <Text style={styles.sectionTitle}>{t('images')}</Text>
       
       {images.map((img) => (
         <View key={String(img[f('ImageId')])} style={styles.imgRow}>
           <Image source={{ uri: img[f('ImageUrl')] }} style={styles.imgThumb} />
-          <View style={{ flex: 1, marginLeft: 10 }}>
+          <View style={{ flex: 1, marginLeft: 12 }}>
             <TouchableOpacity onPress={() => handleSetThumbnail(img[f('ImageId')])}>
-              <Text style={{ color: img[f('IsThumbnail')] ? '#2a7' : '#888', fontWeight: 'bold' }}>
+              <Text style={{ color: img[f('IsThumbnail')] ? '#34C759' : '#8E8E93', fontWeight: '600' }}>
                 {img[f('IsThumbnail')] ? `✓ ${t('thumbnail')}` : t('set_thumbnail')}
               </Text>
             </TouchableOpacity>
           </View>
           <TouchableOpacity onPress={() => handleRemoveImage(img[f('ImageId')])}>
-            <Text style={{ color: '#e33', fontWeight: 'bold' }}>{t('delete')}</Text>
+            <Text style={{ color: '#FF3B30', fontWeight: '600' }}>{t('delete')}</Text>
           </TouchableOpacity>
         </View>
       ))}
@@ -190,6 +191,7 @@ export default function DishFormScreen({ route, navigation }) {
           placeholder="https://..." 
           value={newImageUrl} 
           onChangeText={setNewImageUrl} 
+          placeholderTextColor="#999"
         />
         <TouchableOpacity style={styles.addImgBtn} onPress={handleAddImage}>
           <Text style={{ color: '#fff', fontWeight: 'bold' }}>{t('add_image')}</Text>
@@ -207,16 +209,16 @@ export default function DishFormScreen({ route, navigation }) {
       )}
       <View style={{ height: 40 }} />
 
-      {/* Hộp thoại Xác nhận Xóa trong Form */}
       <Modal visible={showDeleteConfirm} transparent animationType="fade">
         <View style={styles.modalBg}>
           <View style={styles.modalBox}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>{t('confirm_delete')}</Text>
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
-              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#ccc' }]} onPress={() => setShowDeleteConfirm(false)}>
-                <Text>{t('cancel')}</Text>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#333' }}>{t('confirm_delete')}</Text>
+            {/* Sửa gap thành marginRight */}
+            <View style={{ flexDirection: 'row', marginTop: 10 }}>
+              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#F2F2F7', marginRight: 10 }]} onPress={() => setShowDeleteConfirm(false)}>
+                <Text style={{ color: '#333', fontWeight: '600' }}>{t('cancel')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#e33' }]} onPress={executeDelete}>
+              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#FF3B30' }]} onPress={executeDelete}>
                 <Text style={{ color: '#fff', fontWeight: 'bold' }}>{t('delete')}</Text>
               </TouchableOpacity>
             </View>
@@ -228,21 +230,22 @@ export default function DishFormScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  label: { fontWeight: '600', marginTop: 12, marginBottom: 4 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 10, backgroundColor: '#fff', marginBottom: 4 },
-  err: { color: '#c00', fontSize: 12, marginTop: 4 },
-  chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, backgroundColor: '#eee' },
-  chipActive: { backgroundColor: '#2a7' },
-  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 },
-  saveBtn: { marginTop: 24, backgroundColor: '#2a7', padding: 14, borderRadius: 10, alignItems: 'center' },
-  saveText: { color: '#fff', fontWeight: '700' },
-  delBtn: { marginTop: 10, backgroundColor: '#e33', padding: 14, borderRadius: 10, alignItems: 'center' },
-  delText: { color: '#fff', fontWeight: '700' },
-  imgRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9f9f9', padding: 8, borderRadius: 8, marginBottom: 8 },
-  imgThumb: { width: 50, height: 50, borderRadius: 6, backgroundColor: '#ddd' },
-  addImgBtn: { backgroundColor: '#2a7', padding: 10, borderRadius: 8, marginLeft: 8 },
-  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalBox: { backgroundColor: '#fff', padding: 20, borderRadius: 10, width: '80%' },
-  modalBtn: { padding: 10, borderRadius: 6, flex: 1, alignItems: 'center' }
+  container: { flex: 1, backgroundColor: '#F2F2F7' },
+  label: { fontWeight: '600', marginTop: 12, marginBottom: 6, color: '#333' },
+  sectionTitle: { fontWeight: '700', marginTop: 24, marginBottom: 10, fontSize: 16, color: '#1C1C1E', textAlign: 'center' },
+  input: { borderWidth: 1, borderColor: '#D1D1D6', borderRadius: 10, padding: 12, backgroundColor: '#FFFFFF', marginBottom: 4, color: '#333' },
+  err: { color: '#FF3B30', fontSize: 12, marginTop: 2, marginBottom: 8, fontWeight: '500' },
+  chip: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#D1D1D6' },
+  chipActive: { backgroundColor: '#007AFF', borderColor: '#007AFF' },
+  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, backgroundColor: '#FFFFFF', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#D1D1D6' },
+  saveBtn: { marginTop: 24, backgroundColor: '#007AFF', padding: 16, borderRadius: 12, alignItems: 'center' },
+  saveText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  delBtn: { marginTop: 12, backgroundColor: '#FFEBEB', padding: 16, borderRadius: 12, alignItems: 'center' },
+  delText: { color: '#FF3B30', fontWeight: '700', fontSize: 16 },
+  imgRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', padding: 10, borderRadius: 10, marginBottom: 8, borderWidth: 1, borderColor: '#E5E5EA' },
+  imgThumb: { width: 60, height: 60, borderRadius: 8, backgroundColor: '#F2F2F7' },
+  addImgBtn: { backgroundColor: '#007AFF', padding: 14, borderRadius: 10, marginLeft: 10 },
+  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+  modalBox: { backgroundColor: '#fff', padding: 24, borderRadius: 16, width: '85%', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
+  modalBtn: { padding: 12, borderRadius: 10, flex: 1, alignItems: 'center' }
 });
