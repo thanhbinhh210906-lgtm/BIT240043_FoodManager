@@ -26,13 +26,14 @@ export default function DishDetailScreen({ route, navigation }) {
     })();
   }, [dishId]);
 
-  if (loading) return <View style={styles.center}><ActivityIndicator /></View>;
+  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#007AFF" /></View>;
+  
   if (notFound) {
     return (
       <View style={styles.center}>
-        <Text>{t('not_found')}</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 12 }}>
-          <Text style={{ color: '#2a7' }}>{t('cancel')}</Text>
+        <Text style={{ fontSize: 16, color: '#8E8E93', marginBottom: 12 }}>{t('not_found')}</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 10 }}>
+          <Text style={{ color: '#007AFF', fontWeight: '600' }}>{t('cancel')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -41,11 +42,18 @@ export default function DishDetailScreen({ route, navigation }) {
   const prep = dish[f('PreparationTime')];
   const prepLabel = prep <= 15 ? t('quick') : t('regular');
 
+  // Xử lý tên danh mục (dịch nếu là danh mục mặc định)
+  const catId = dish[f('DishCategoryId')];
+  const catNameStr = catId === 1 ? t('cat_main') : catId === 2 ? t('cat_drink') : catId === 3 ? t('cat_dessert') : (category ? category[f('Name')] : '?');
+
   return (
     <ScrollView style={styles.container}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ padding: 12 }}>
+      {/* Phần ảnh trượt ngang */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ padding: 12 }} contentContainerStyle={{ paddingRight: 12 }}>
         {images.length === 0 ? (
-          <View style={[styles.img, styles.imgPlaceholder]}><Text>{t('no_data')}</Text></View>
+          <View style={[styles.img, styles.imgPlaceholder]}>
+            <Text style={{ color: '#8E8E93' }}>{t('no_data')}</Text>
+          </View>
         ) : (
           images.map((img) => (
             <Image key={String(img[f('ImageId')])} source={{ uri: img[f('ImageUrl')] }} style={styles.img} />
@@ -53,16 +61,39 @@ export default function DishDetailScreen({ route, navigation }) {
         )}
       </ScrollView>
 
-      <View style={{ padding: 16 }}>
+      {/* Phần thông tin chi tiết */}
+      <View style={styles.infoContainer}>
         <Text style={styles.title}>{dish[f('Name')]}</Text>
-        <Text style={styles.meta}>{t('category')}: {category ? category[f('Name')] : '?'}</Text>
-        <Text style={styles.meta}>{t('price')}: {dish[f('Price')].toLocaleString()} đ</Text>
-        <Text style={styles.meta}>{t('prep_time')}: {prep} — {prepLabel}</Text>
-        <Text style={styles.meta}>{t('available')}: {dish[f('IsAvailable')] ? 'ON' : 'OFF'}</Text>
-        <Text style={styles.desc}>{dish[f('Description')]}</Text>
+        
+        <View style={styles.row}>
+          <Text style={styles.label}>{t('category')}:</Text>
+          <Text style={styles.value}>{catNameStr}</Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>{t('price')}:</Text>
+          <Text style={[styles.value, { color: '#34C759', fontWeight: '700' }]}>
+            {dish[f('Price')].toLocaleString()} VND
+          </Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>{t('prep_time')}:</Text>
+          <Text style={styles.value}>{prep} - {prepLabel}</Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>{t('available')}:</Text>
+          <Text style={[styles.value, { color: dish[f('IsAvailable')] ? '#34C759' : '#FF3B30', fontWeight: '600' }]}>
+            {dish[f('IsAvailable')] ? 'ON' : 'OFF'}
+          </Text>
+        </View>
+
+        <Text style={styles.sectionTitle}>{t('description')}</Text>
+        <Text style={styles.desc}>{dish[f('Description')] || '---'}</Text>
 
         <TouchableOpacity style={styles.editBtn} onPress={() => navigation.navigate('DishForm', { mode: 'edit', dishId })}>
-          <Text style={{ color: '#fff', fontWeight: '700' }}>{t('edit')}</Text>
+          <Text style={styles.editBtnText}>{t('edit')}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -70,12 +101,22 @@ export default function DishDetailScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  img: { width: 260, height: 180, borderRadius: 10, marginRight: 10, backgroundColor: '#eee' },
-  imgPlaceholder: { justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 22, fontWeight: '800' },
-  meta: { color: '#555', marginTop: 6 },
-  desc: { marginTop: 12, color: '#333' },
-  editBtn: { marginTop: 20, backgroundColor: '#2a7', padding: 14, borderRadius: 10, alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#F2F2F7' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F2F2F7' },
+  
+  img: { width: 280, height: 200, borderRadius: 16, marginRight: 12, backgroundColor: '#E5E5EA' },
+  imgPlaceholder: { justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#D1D1D6', borderStyle: 'dashed' },
+  
+  infoContainer: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, minHeight: 400, marginTop: -10 },
+  title: { fontSize: 24, fontWeight: '800', color: '#1C1C1E', marginBottom: 16 },
+  
+  row: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  label: { fontSize: 15, color: '#8E8E93', width: 100 },
+  value: { fontSize: 15, color: '#333', fontWeight: '500', flex: 1 },
+  
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1C1C1E', marginTop: 20, marginBottom: 8 },
+  desc: { fontSize: 15, color: '#555', lineHeight: 22, backgroundColor: '#F2F2F7', padding: 12, borderRadius: 10 },
+  
+  editBtn: { marginTop: 30, backgroundColor: '#007AFF', padding: 16, borderRadius: 12, alignItems: 'center' },
+  editBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
 });
