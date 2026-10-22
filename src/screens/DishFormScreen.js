@@ -25,7 +25,7 @@ export default function DishFormScreen({ route, navigation }) {
   const [errors, setErrors] = useState({});
   const [images, setImages] = useState([]);
   const [newImageUrl, setNewImageUrl] = useState('');
-  
+
   // State cho Modal Xóa
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -105,7 +105,6 @@ export default function DishFormScreen({ route, navigation }) {
     navigation.goBack();
   };
 
-  // Hàm thực thi xóa
   const executeDelete = async () => {
     try {
       const updated = allDishes.filter((x) => x[f('DishId')] !== dishId);
@@ -115,7 +114,7 @@ export default function DishFormScreen({ route, navigation }) {
       
       await addPendingSync('DELETE', { [f('DishId')]: dishId });
       
-      setShowDeleteConfirm(false); // Đóng modal
+      setShowDeleteConfirm(false);
       navigation.goBack();
     } catch(e) {
       Alert.alert('Lỗi', 'Không thể xóa');
@@ -208,7 +207,7 @@ export default function DishFormScreen({ route, navigation }) {
       )}
       <View style={{ height: 40 }} />
 
-      {/* Hộp thoại xác nhận xóa tự chế */}
+      {/* Hộp thoại Xác nhận Xóa trong Form */}
       <Modal visible={showDeleteConfirm} transparent animationType="fade">
         <View style={styles.modalBg}>
           <View style={styles.modalBox}>
