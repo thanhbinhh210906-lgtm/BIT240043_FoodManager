@@ -26,10 +26,53 @@ export default function DishListScreen({ navigation }) {
   const [deleteId, setDeleteId] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // Hàm tải dữ liệu: Ưu tiên lấy từ API, nếu lỗi thì lấy từ bộ nhớ máy
   const load = useCallback(async () => {
     setLoading(true);
-    const [d, c, i] = await Promise.all([getDishes(), getCategories(), getImages()]);
-    setDishes(d); setCategories(c); setImages(i); setLoading(false);
+    try {
+      // 1. Gọi API lấy dữ liệu từ MockAPI
+      const response = await fetch('https://6ad71c60f71f154ac487cab2.mockapi.io/BIT240043_Dish');
+      if (!response.ok) throw new Error('Network response was not ok');
+      const apiData = await response.json();
+
+      // 2. Chuyển đổi dữ liệu từ API sang chuẩn của App
+      const parsedDishes = apiData.map(item => ({
+        [f('DishId')]: item.BIT240043_Id,
+        [f('Name')]: item.BIT240043_Name,
+        [f('Price')]: item.BIT240043_Price,
+        [f('PreparationTime')]: item.BIT240043_PreparationTime,
+        [f('IsAvailable')]: item.BIT240043_IsAvailable,
+        [f('Description')]: item.BIT240043_Description,
+        [f('DishCategoryId')]: item.BIT240043_DishCategoryId,
+      }));
+
+      // 3. Tạo dữ liệu ảnh tự động từ link ảnh trên API (Vì MockAPI của bạn đang lưu ảnh dạng chuỗi)
+      const parsedImages = apiData.map((item, index) => ({
+        [f('ImageId')]: Date.now() + index,
+        [f('ImageUrl')]: item.BIT240043_DishImage,
+        [f('IsThumbnail')]: true,
+        [f('DishId')]: item.BIT240043_Id,
+      }));
+
+      // 4. Lưu đè vào bộ nhớ máy (AsyncStorage) để dùng khi Offline
+      await saveDishes(parsedDishes);
+      await saveImages(parsedImages);
+
+      // 5. Cập nhật giao diện
+      setDishes(parsedDishes);
+      setImages(parsedImages);
+
+    } catch (error) {
+      console.log('Lỗi tải API, chuyển sang dùng dữ liệu Offline:', error);
+      // NẾU MẤT MẠNG: Lấy dữ liệu đang lưu trong máy ra hiển thị
+      const [d, i] = await Promise.all([getDishes(), getImages()]);
+      setDishes(d); setImages(i);
+    }
+
+    // Luôn lấy danh mục từ bộ nhớ máy
+    const c = await getCategories();
+    setCategories(c); 
+    setLoading(false);
   }, []);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
