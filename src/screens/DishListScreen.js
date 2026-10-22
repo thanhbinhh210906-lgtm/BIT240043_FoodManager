@@ -3,7 +3,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator, TextInput, ScrollView, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { getDishes, getCategories, getImages, saveDishes, saveImages, addPendingSync } from '../services/storage'; // Thêm saveDishes, saveImages, addPendingSync
+import { getDishes, getCategories, getImages, saveDishes, saveImages, addPendingSync } from '../services/storage';
 import { f } from '../models/models';
 import { useApp } from '../context/AppContext';
 
@@ -37,8 +37,7 @@ export default function DishListScreen({ navigation }) {
     images.find((img) => img[f('DishId')] === dishId && img[f('IsThumbnail')]) ||
     images.find((img) => img[f('DishId')] === dishId);
 
-    const catName = (catId) => {
-    // Dịch tên loại món dựa vào ID
+  const catName = (catId) => {
     if (catId === 1) return t('cat_main');
     if (catId === 2) return t('cat_drink');
     if (catId === 3) return t('cat_dessert');
@@ -56,18 +55,11 @@ export default function DishListScreen({ navigation }) {
           text: t('yes'),
           style: 'destructive',
           onPress: async () => {
-            // Xóa Dish
             const updated = dishes.filter((x) => x[f('DishId')] !== dishId);
             await saveDishes(updated);
-            
-            // Xóa Image liên quan
             const imgs = await getImages();
             await saveImages(imgs.filter((i) => i[f('DishId')] !== dishId));
-            
-            // Đưa vào hàng đợi xóa (Offline Sync)
             await addPendingSync('DELETE', { [f('DishId')]: dishId });
-            
-            // Load lại list
             load();
           },
         },
@@ -136,7 +128,7 @@ export default function DishListScreen({ navigation }) {
               const active = selectedCat === cid;
               return (
                 <TouchableOpacity key={cid} style={[styles.chip, active && styles.chipActive]} onPress={() => setSelectedCat(cid)}>
-                  <Text style={{ color: active ? '#fff' : '#333' }}>{c[f('Name')]}</Text>
+                  <Text style={{ color: active ? '#fff' : '#333' }}>{catName(cid)}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -188,7 +180,6 @@ export default function DishListScreen({ navigation }) {
                 </View>
               </TouchableOpacity>
               
-              {/* Nút Sửa / Xóa nhanh trên List */}
               <View style={styles.actionButtons}>
                 <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('DishForm', { mode: 'edit', dishId: item[f('DishId')] })}>
                   <Text style={styles.actionText}>{t('edit')}</Text>
