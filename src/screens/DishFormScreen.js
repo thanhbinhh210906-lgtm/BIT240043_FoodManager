@@ -1,6 +1,6 @@
 // MSSV: BIT240043
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Switch, Alert, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Switch, Alert, Image, Modal } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { getCategories, getDishes, saveDishes, nextId, getImages, saveImages, addPendingSync } from '../services/storage';
 import { f, STORAGE_KEYS } from '../models/models';
@@ -23,10 +23,11 @@ export default function DishFormScreen({ route, navigation }) {
     [f('DishCategoryId')]: null,
   });
   const [errors, setErrors] = useState({});
-
-  // Images state
   const [images, setImages] = useState([]);
   const [newImageUrl, setNewImageUrl] = useState('');
+  
+  // State cho Modal Xóa
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -92,39 +93,33 @@ export default function DishFormScreen({ route, navigation }) {
       updatedDishes = [...allDishes, normalized];
     }
     
-    // 1. Lưu Local
     await saveDishes(updatedDishes);
 
-    // Lưu Images
     const allImgs = await getImages();
     const otherImgs = allImgs.filter((i) => i[f('DishId')] !== finalDishId);
     const finalImgs = images.map((img) => ({ ...img, [f('DishId')]: finalDishId }));
     await saveImages([...otherImgs, ...finalImgs]);
 
-    // 2. Đưa vào hàng đợi Sync
     await addPendingSync(isEdit ? 'UPDATE' : 'CREATE', normalized);
 
     navigation.goBack();
   };
 
-  const onDelete = () => {
-    Alert.alert(t('confirm_delete'), '', [
-      { text: t('no'), style: 'cancel' },
-      {
-        text: t('yes'), style: 'destructive',
-        onPress: async () => {
-          const updated = allDishes.filter((x) => x[f('DishId')] !== dishId);
-          await saveDishes(updated);
-          const imgs = await getImages();
-          await saveImages(imgs.filter((i) => i[f('DishId')] !== dishId));
-          
-          // Đưa vào hàng đợi xóa
-          await addPendingSync('DELETE', { [f('DishId')]: dishId });
-          
-          navigation.goBack();
-        },
-      },
-    ]);
+  // Hàm thực thi xóa
+  const executeDelete = async () => {
+    try {
+      const updated = allDishes.filter((x) => x[f('DishId')] !== dishId);
+      await saveDishes(updated);
+      const imgs = await getImages();
+      await saveImages(imgs.filter((i) => i[f('DishId')] !== dishId));
+      
+      await addPendingSync('DELETE', { [f('DishId')]: dishId });
+      
+      setShowDeleteConfirm(false); // Đóng modal
+      navigation.goBack();
+    } catch(e) {
+      Alert.alert('Lỗi', 'Không thể xóa');
+    }
   };
 
   const renderError = (key) => errors[key] ? <Text style={styles.err}>{t(errors[key])}</Text> : null;
@@ -153,14 +148,14 @@ export default function DishFormScreen({ route, navigation }) {
 
       <Text style={styles.label}>{t('category')}</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                {categories.map((c) => {
+        {categories.map((c) => {
           const cid = c[f('DishCategoryId')];
           const active = form[f('DishCategoryId')] === cid;
           return (
             <TouchableOpacity key={cid} style={[styles.chip, active && styles.chipActive]} onPress={() => setField(f('DishCategoryId'), cid)}>
               <Text style={{ color: active ? '#fff' : '#333' }}>
-  {cid === 1 ? t('cat_main') : cid === 2 ? t('cat_drink') : cid === 3 ? t('cat_dessert') : c[f('Name')]}
-</Text>
+                {cid === 1 ? t('cat_main') : cid === 2 ? t('cat_drink') : cid === 3 ? t('cat_dessert') : c[f('Name')]}
+              </Text>
             </TouchableOpacity>
           );
         })}
@@ -207,11 +202,28 @@ export default function DishFormScreen({ route, navigation }) {
       </TouchableOpacity>
 
       {isEdit && (
-        <TouchableOpacity style={styles.delBtn} onPress={onDelete}>
+        <TouchableOpacity style={styles.delBtn} onPress={() => setShowDeleteConfirm(true)}>
           <Text style={styles.delText}>{t('delete')}</Text>
         </TouchableOpacity>
       )}
       <View style={{ height: 40 }} />
+
+      {/* Hộp thoại xác nhận xóa tự chế */}
+      <Modal visible={showDeleteConfirm} transparent animationType="fade">
+        <View style={styles.modalBg}>
+          <View style={styles.modalBox}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>{t('confirm_delete')}</Text>
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#ccc' }]} onPress={() => setShowDeleteConfirm(false)}>
+                <Text>{t('cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#e33' }]} onPress={executeDelete}>
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>{t('delete')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -231,4 +243,7 @@ const styles = StyleSheet.create({
   imgRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9f9f9', padding: 8, borderRadius: 8, marginBottom: 8 },
   imgThumb: { width: 50, height: 50, borderRadius: 6, backgroundColor: '#ddd' },
   addImgBtn: { backgroundColor: '#2a7', padding: 10, borderRadius: 8, marginLeft: 8 },
+  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  modalBox: { backgroundColor: '#fff', padding: 20, borderRadius: 10, width: '80%' },
+  modalBtn: { padding: 10, borderRadius: 6, flex: 1, alignItems: 'center' }
 });
