@@ -1,5 +1,5 @@
 // MSSV: BIT240043 - Project: BIT240043_FoodManager
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './src/i18n';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -8,7 +8,7 @@ import { AppProvider, useApp } from './src/context/AppContext';
 import DishListScreen from './src/screens/DishListScreen';
 import DishDetailScreen from './src/screens/DishDetailScreen';
 import DishFormScreen from './src/screens/DishFormScreen';
-import { ActivityIndicator, View, Alert } from 'react-native';
+import { ActivityIndicator, View, Alert, Text } from 'react-native'; // Thêm Text
 import NetInfo from '@react-native-community/netinfo';
 import { getPendingSync, clearPendingSync } from './src/services/storage';
 import { createDishApi, updateDishApi, deleteDishApi } from './src/services/api';
@@ -20,8 +20,14 @@ function RootNavigator() {
   const { t } = useTranslation();
   const { ready } = useApp();
 
+  // 1. Thêm state để lưu trạng thái mạng
+  const [isOffline, setIsOffline] = useState(false);
+
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(async (state) => {
+      // 2. Cập nhật trạng thái mạng (nếu isConnected = false thì là đang offline)
+      setIsOffline(!state.isConnected);
+
       if (state.isConnected) {
         const queue = await getPendingSync();
         if (queue.length > 0) {
@@ -30,7 +36,6 @@ function RootNavigator() {
             for (const item of queue) {
               const payload = item.payload;
 
-              // Gửi toàn bộ dữ liệu bao gồm cả DishId để đồng bộ hoàn hảo
               const apiPayload = {
                 BIT240043_DishId: payload[f('DishId')],
                 BIT240043_Name: payload[f('Name')],
@@ -67,14 +72,23 @@ function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="DishList" component={DishListScreen} options={{ title: t('list_title') }} />
-        <Stack.Screen name="DishDetail" component={DishDetailScreen} options={{ title: t('detail_title') }} />
-        <Stack.Screen name="DishForm" component={DishFormScreen}
-          options={({ route }) => ({ title: route.params?.mode === 'edit' ? t('edit_title') : t('add_title') })} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View style={{ flex: 1 }}>
+      {/* 3. Hiển thị Banner đỏ khi mất mạng */}
+      {isOffline && (
+        <View style={{ backgroundColor: '#e33', paddingTop: 40, paddingBottom: 10, alignItems: 'center' }}>
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>⚠️ Ngoại tuyến - Đang lưu dữ liệu vào máy</Text>
+        </View>
+      )}
+      
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen name="DishList" component={DishListScreen} options={{ title: t('list_title') }} />
+          <Stack.Screen name="DishDetail" component={DishDetailScreen} options={{ title: t('detail_title') }} />
+          <Stack.Screen name="DishForm" component={DishFormScreen}
+            options={({ route }) => ({ title: route.params?.mode === 'edit' ? t('edit_title') : t('add_title') })} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </View>
   );
 }
 
