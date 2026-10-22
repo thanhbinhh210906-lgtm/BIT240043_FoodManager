@@ -1,4 +1,5 @@
-// MSSV: BIT240043 - Project: BIT240043_FoodManager
+// src/models/models.js
+// XÓA HOÀN TOÀN CÁC DÒNG IMPORT TRONG FILE NÀY
 
 export const STORAGE_KEYS = {
   CATEGORY: 'BIT240043_DishCategory',
