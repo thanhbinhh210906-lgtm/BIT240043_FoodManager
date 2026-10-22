@@ -30,8 +30,9 @@ function RootNavigator() {
             for (const item of queue) {
               const payload = item.payload;
 
-              // Map dữ liệu sang đúng tên field có tiền tố BIT240043_ của MockAPI
+              // Gửi toàn bộ dữ liệu bao gồm cả DishId để đồng bộ hoàn hảo
               const apiPayload = {
+                BIT240043_DishId: payload[f('DishId')],
                 BIT240043_Name: payload[f('Name')],
                 BIT240043_Price: payload[f('Price')],
                 BIT240043_PreparationTime: payload[f('PreparationTime')],
