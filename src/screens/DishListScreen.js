@@ -16,7 +16,6 @@ export default function DishListScreen({ navigation }) {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Filter states
   const [search, setSearch] = useState('');
   const [selectedCat, setSelectedCat] = useState(null);
   const [onlyAvailable, setOnlyAvailable] = useState(false);
@@ -25,7 +24,6 @@ export default function DishListScreen({ navigation }) {
   const [sortType, setSortType] = useState('none');
   const [showFilters, setShowFilters] = useState(false);
 
-  // State cho Modal xóa
   const [deleteId, setDeleteId] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -65,9 +63,7 @@ export default function DishListScreen({ navigation }) {
       setShowDeleteConfirm(false);
       setDeleteId(null);
       load();
-    } catch (e) {
-      // Bỏ qua lỗi
-    }
+    } catch (e) {}
   };
 
   const filteredDishes = useMemo(() => {
@@ -120,7 +116,6 @@ export default function DishListScreen({ navigation }) {
       {showFilters && (
         <View style={styles.filterPanel}>
           <TextInput style={styles.input} placeholder={t('search_placeholder')} value={search} onChangeText={setSearch} />
-          
           <Text style={styles.filterLabel}>{t('category')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <TouchableOpacity style={[styles.chip, selectedCat === null && styles.chipActive]} onPress={() => setSelectedCat(null)}>
@@ -178,7 +173,7 @@ export default function DishListScreen({ navigation }) {
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={styles.name}>{item[f('Name')]}</Text>
                   <Text style={styles.meta}>{catName(item[f('DishCategoryId')])}</Text>
-                  <Text style={styles.meta}>{item[f('Price')].toLocaleString()} đ · {prepLabel}</Text>
+                  <Text style={styles.meta}>{item[f('Price')].toLocaleString()} VND - {prepLabel}</Text>
                   {!item[f('IsAvailable')] && <Text style={styles.unavailable}>● {t('available')}: OFF</Text>}
                 </View>
               </TouchableOpacity>
@@ -200,7 +195,6 @@ export default function DishListScreen({ navigation }) {
         <Text style={styles.fabText}>+ {t('add_button')}</Text>
       </TouchableOpacity>
 
-      {/* Hộp thoại Xác nhận Xóa (Tự chế) */}
       <Modal visible={showDeleteConfirm} transparent animationType="fade">
         <View style={styles.modalBg}>
           <View style={styles.modalBox}>
