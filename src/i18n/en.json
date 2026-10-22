@@ -22,6 +22,8 @@
   "quick": "Quick",
   "regular": "Regular",
   "no_data": "No data",
+  "error": "Error",
+  "cannot_delete": "Cannot delete this dish",
   "validation_name_required": "Name is required",
   "validation_price_positive": "Price must be > 0",
   "validation_prep_positive": "Preparation time must be > 0",
