@@ -64,7 +64,7 @@ export default function DishListScreen({ navigation }) {
       
       setShowDeleteConfirm(false);
       setDeleteId(null);
-      load(); // Load lại danh sách
+      load();
     } catch (e) {
       // Bỏ qua lỗi
     }
