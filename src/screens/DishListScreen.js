@@ -1,6 +1,6 @@
 // MSSV: BIT240043
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator, TextInput, ScrollView, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator, TextInput, ScrollView, Modal } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { getDishes, getCategories, getImages, saveDishes, saveImages, addPendingSync } from '../services/storage';
@@ -25,6 +25,10 @@ export default function DishListScreen({ navigation }) {
   const [sortType, setSortType] = useState('none');
   const [showFilters, setShowFilters] = useState(false);
 
+  // State cho Modal xóa
+  const [deleteId, setDeleteId] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     const [d, c, i] = await Promise.all([getDishes(), getCategories(), getImages()]);
@@ -45,26 +49,25 @@ export default function DishListScreen({ navigation }) {
     return c ? c[f('Name')] : '?';
   };
 
-  const handleDelete = (dishId) => {
-    Alert.alert(
-      t('confirm_delete'),
-      '',
-      [
-        { text: t('no'), style: 'cancel' },
-        {
-          text: t('yes'),
-          style: 'destructive',
-          onPress: async () => {
-            const updated = dishes.filter((x) => x[f('DishId')] !== dishId);
-            await saveDishes(updated);
-            const imgs = await getImages();
-            await saveImages(imgs.filter((i) => i[f('DishId')] !== dishId));
-            await addPendingSync('DELETE', { [f('DishId')]: dishId });
-            load();
-          },
-        },
-      ]
-    );
+  const handleDeleteClick = (dishId) => {
+    setDeleteId(dishId);
+    setShowDeleteConfirm(true);
+  };
+
+  const executeDelete = async () => {
+    try {
+      const updated = dishes.filter((x) => x[f('DishId')] !== deleteId);
+      await saveDishes(updated);
+      const imgs = await getImages();
+      await saveImages(imgs.filter((i) => i[f('DishId')] !== deleteId));
+      await addPendingSync('DELETE', { [f('DishId')]: deleteId });
+      
+      setShowDeleteConfirm(false);
+      setDeleteId(null);
+      load(); // Load lại danh sách
+    } catch (e) {
+      // Bỏ qua lỗi
+    }
   };
 
   const filteredDishes = useMemo(() => {
@@ -184,7 +187,7 @@ export default function DishListScreen({ navigation }) {
                 <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('DishForm', { mode: 'edit', dishId: item[f('DishId')] })}>
                   <Text style={styles.actionText}>{t('edit')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => handleDelete(item[f('DishId')])}>
+                <TouchableOpacity style={styles.actionBtn} onPress={() => handleDeleteClick(item[f('DishId')])}>
                   <Text style={[styles.actionText, { color: '#e33' }]}>{t('delete')}</Text>
                 </TouchableOpacity>
               </View>
@@ -196,6 +199,23 @@ export default function DishListScreen({ navigation }) {
       <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('DishForm', { mode: 'create' })}>
         <Text style={styles.fabText}>+ {t('add_button')}</Text>
       </TouchableOpacity>
+
+      {/* Hộp thoại Xác nhận Xóa (Tự chế) */}
+      <Modal visible={showDeleteConfirm} transparent animationType="fade">
+        <View style={styles.modalBg}>
+          <View style={styles.modalBox}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>{t('confirm_delete')}</Text>
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#ccc' }]} onPress={() => setShowDeleteConfirm(false)}>
+                <Text>{t('cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#e33' }]} onPress={executeDelete}>
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>{t('delete')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -230,4 +250,7 @@ const styles = StyleSheet.create({
   empty: { textAlign: 'center', marginTop: 30, color: '#888' },
   fab: { position: 'absolute', right: 16, bottom: 20, backgroundColor: '#2a7', paddingVertical: 12, paddingHorizontal: 18, borderRadius: 24, elevation: 4 },
   fabText: { color: '#fff', fontWeight: '700' },
+  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  modalBox: { backgroundColor: '#fff', padding: 20, borderRadius: 10, width: '80%' },
+  modalBtn: { padding: 10, borderRadius: 6, flex: 1, alignItems: 'center' }
 });
