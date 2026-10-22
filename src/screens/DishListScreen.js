@@ -22,7 +22,6 @@ export default function DishListScreen({ navigation }) {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [sortType, setSortType] = useState('none');
-  const [showFilters, setShowFilters] = useState(false);
 
   const [deleteId, setDeleteId] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -100,68 +99,66 @@ export default function DishListScreen({ navigation }) {
     setMinPrice(''); setMaxPrice(''); setSortType('none');
   };
 
-  if (loading) return <View style={styles.center}><ActivityIndicator size="large" /></View>;
+  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#007AFF" /></View>;
 
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => setShowFilters(!showFilters)}>
-          <Text style={styles.iconText}>⚙️ {t('filter_sort')}</Text>
-        </TouchableOpacity>
+        <View style={{ flex: 1 }} />
         <TouchableOpacity style={styles.langBtn} onPress={() => changeLanguage(lang === 'en' ? 'vi' : 'en')}>
           <Text style={styles.langText}>{lang === 'en' ? '🌐 EN' : '🌐 VI'}</Text>
         </TouchableOpacity>
       </View>
 
-      {showFilters && (
-        <View style={styles.filterPanel}>
-          <TextInput style={styles.input} placeholder={t('search_placeholder')} value={search} onChangeText={setSearch} />
-          <Text style={styles.filterLabel}>{t('category')}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <TouchableOpacity style={[styles.chip, selectedCat === null && styles.chipActive]} onPress={() => setSelectedCat(null)}>
-              <Text style={{ color: selectedCat === null ? '#fff' : '#333' }}>{t('all_categories')}</Text>
-            </TouchableOpacity>
-            {categories.map((c) => {
-              const cid = c[f('DishCategoryId')];
-              const active = selectedCat === cid;
-              return (
-                <TouchableOpacity key={cid} style={[styles.chip, active && styles.chipActive]} onPress={() => setSelectedCat(cid)}>
-                  <Text style={{ color: active ? '#fff' : '#333' }}>{catName(cid)}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-
-          <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
-            <TextInput style={[styles.input, { flex: 1 }]} placeholder={t('price_min')} keyboardType="numeric" value={minPrice} onChangeText={setMinPrice} />
-            <TextInput style={[styles.input, { flex: 1 }]} placeholder={t('price_max')} keyboardType="numeric" value={maxPrice} onChangeText={setMaxPrice} />
-          </View>
-          {isPriceRangeInvalid && <Text style={styles.errorText}>{t('invalid_price_range')}</Text>}
-
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, alignItems: 'center' }}>
-            <TouchableOpacity onPress={() => setOnlyAvailable(!onlyAvailable)} style={styles.checkboxRow}>
-              <View style={[styles.checkbox, onlyAvailable && styles.checkboxActive]} />
-              <Text style={{ marginLeft: 6 }}>{t('available')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={clearFilters}><Text style={{ color: '#e33' }}>{t('clear_filters')}</Text></TouchableOpacity>
-          </View>
-
-          <Text style={styles.filterLabel}>{t('filter_sort')}</Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {['price_asc', 'price_desc', 'prep_asc'].map((s) => (
-              <TouchableOpacity key={s} style={[styles.chip, sortType === s && styles.chipActive]} onPress={() => setSortType(s)}>
-                <Text style={{ color: sortType === s ? '#fff' : '#333', fontSize: 12 }}>{t(`sort_${s}`)}</Text>
+      <View style={styles.filterPanel}>
+        <TextInput style={styles.input} placeholder={t('search_placeholder')} value={search} onChangeText={setSearch} placeholderTextColor="#999" />
+        <Text style={styles.filterLabel}>{t('category')}</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <TouchableOpacity style={[styles.chip, selectedCat === null && styles.chipActive]} onPress={() => setSelectedCat(null)}>
+            <Text style={{ color: selectedCat === null ? '#fff' : '#555', fontWeight: '500' }}>{t('all_categories')}</Text>
+          </TouchableOpacity>
+          {categories.map((c) => {
+            const cid = c[f('DishCategoryId')];
+            const active = selectedCat === cid;
+            return (
+              <TouchableOpacity key={cid} style={[styles.chip, active && styles.chipActive]} onPress={() => setSelectedCat(cid)}>
+                <Text style={{ color: active ? '#fff' : '#555', fontWeight: '500' }}>{catName(cid)}</Text>
               </TouchableOpacity>
-            ))}
-          </View>
+            );
+          })}
+        </ScrollView>
+
+        <View style={{ flexDirection: 'row', marginTop: 10 }}>
+          <TextInput style={[styles.input, { flex: 1, marginRight: 10, marginBottom: 0 }]} placeholder={t('price_min')} keyboardType="numeric" value={minPrice} onChangeText={setMinPrice} placeholderTextColor="#999" />
+          <TextInput style={[styles.input, { flex: 1, marginBottom: 0 }]} placeholder={t('price_max')} keyboardType="numeric" value={maxPrice} onChangeText={setMaxPrice} placeholderTextColor="#999" />
         </View>
-      )}
+        {isPriceRangeInvalid ? <Text style={styles.errorText}>{t('invalid_price_range')}</Text> : null}
+
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => setOnlyAvailable(!onlyAvailable)} style={styles.checkboxRow}>
+            <View style={[styles.checkbox, onlyAvailable && styles.checkboxActive]} />
+            <Text style={{ marginLeft: 6, color: '#333' }}>{t('available')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={clearFilters}>
+            <Text style={{ color: '#FF3B30', fontWeight: '500' }}>{t('clear_filters')}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.filterLabel}>{t('filter_sort')}</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+          {['price_asc', 'price_desc', 'prep_asc'].map((s) => (
+            <TouchableOpacity key={s} style={[styles.chip, sortType === s && styles.chipActive, { marginBottom: 8 }]} onPress={() => setSortType(s)}>
+              <Text style={{ color: sortType === s ? '#fff' : '#555', fontSize: 12, fontWeight: '500' }}>{t(`sort_${s}`)}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
 
       <FlatList
         data={filteredDishes}
         keyExtractor={(item) => String(item[f('DishId')])}
         ListEmptyComponent={<Text style={styles.empty}>{t('no_data')}</Text>}
-        contentContainerStyle={{ padding: 12 }}
+        contentContainerStyle={{ padding: 12, paddingBottom: 80 }}
         renderItem={({ item }) => {
           const thumb = thumbOf(item[f('DishId')]);
           const prep = item[f('PreparationTime')];
@@ -169,12 +166,20 @@ export default function DishListScreen({ navigation }) {
           return (
             <View style={styles.cardWrapper}>
               <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('DishDetail', { dishId: item[f('DishId')] })}>
-                {thumb ? <Image source={{ uri: thumb[f('ImageUrl')] }} style={styles.thumb} /> : <View style={[styles.thumb, styles.thumbPlaceholder]} />}
+                {thumb ? (
+                  <Image source={{ uri: thumb[f('ImageUrl')] }} style={styles.thumb} />
+                ) : (
+                  <View style={[styles.thumb, styles.thumbPlaceholder]}>
+                    <Text style={{ color: '#ccc' }}>No Image</Text>
+                  </View>
+                )}
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={styles.name}>{item[f('Name')]}</Text>
                   <Text style={styles.meta}>{catName(item[f('DishCategoryId')])}</Text>
-                  <Text style={styles.meta}>{item[f('Price')].toLocaleString()} VND - {prepLabel}</Text>
-                  {!item[f('IsAvailable')] && <Text style={styles.unavailable}>● {t('available')}: OFF</Text>}
+                  <Text style={styles.priceText}>{`${item[f('Price')].toLocaleString()} VND - ${prepLabel}`}</Text>
+                  {!item[f('IsAvailable')] && (
+                    <Text style={styles.unavailable}>{`● ${t('available')}: OFF`}</Text>
+                  )}
                 </View>
               </TouchableOpacity>
               
@@ -183,7 +188,7 @@ export default function DishListScreen({ navigation }) {
                   <Text style={styles.actionText}>{t('edit')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionBtn} onPress={() => handleDeleteClick(item[f('DishId')])}>
-                  <Text style={[styles.actionText, { color: '#e33' }]}>{t('delete')}</Text>
+                  <Text style={[styles.actionText, { color: '#FF3B30' }]}>{t('delete')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -198,12 +203,12 @@ export default function DishListScreen({ navigation }) {
       <Modal visible={showDeleteConfirm} transparent animationType="fade">
         <View style={styles.modalBg}>
           <View style={styles.modalBox}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>{t('confirm_delete')}</Text>
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
-              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#ccc' }]} onPress={() => setShowDeleteConfirm(false)}>
-                <Text>{t('cancel')}</Text>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#333' }}>{t('confirm_delete')}</Text>
+            <View style={{ flexDirection: 'row', marginTop: 10 }}>
+              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#F2F2F7', marginRight: 10 }]} onPress={() => setShowDeleteConfirm(false)}>
+                <Text style={{ color: '#333', fontWeight: '600' }}>{t('cancel')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#e33' }]} onPress={executeDelete}>
+              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#FF3B30' }]} onPress={executeDelete}>
                 <Text style={{ color: '#fff', fontWeight: 'bold' }}>{t('delete')}</Text>
               </TouchableOpacity>
             </View>
@@ -215,36 +220,35 @@ export default function DishListScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  topBar: { flexDirection: 'row', justifyContent: 'space-between', padding: 8, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#eee' },
-  iconBtn: { padding: 8, backgroundColor: '#f0f0f0', borderRadius: 6 },
-  iconText: { fontWeight: '600' },
-  langBtn: { padding: 8, backgroundColor: '#fff', borderRadius: 6, borderWidth: 1, borderColor: '#ddd' },
-  langText: { fontWeight: '600' },
-  filterPanel: { backgroundColor: '#fff', padding: 12, borderBottomWidth: 1, borderColor: '#eee' },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 8, marginBottom: 8, backgroundColor: '#fafafa' },
-  filterLabel: { fontWeight: '600', marginTop: 8, marginBottom: 4, fontSize: 12 },
-  chip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, backgroundColor: '#eee', marginRight: 8 },
-  chipActive: { backgroundColor: '#2a7' },
-  errorText: { color: '#e33', fontSize: 12, marginTop: 4 },
+  container: { flex: 1, backgroundColor: '#F2F2F7' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F2F2F7' },
+  topBar: { flexDirection: 'row', justifyContent: 'space-between', padding: 12, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderColor: '#E5E5EA' },
+  langBtn: { paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#F2F2F7', borderRadius: 8 },
+  langText: { fontWeight: '600', color: '#007AFF' },
+  filterPanel: { backgroundColor: '#FFFFFF', padding: 16, borderBottomWidth: 1, borderColor: '#E5E5EA' },
+  input: { borderWidth: 1, borderColor: '#D1D1D6', borderRadius: 10, padding: 10, marginBottom: 8, backgroundColor: '#FAFAFA', color: '#333' },
+  filterLabel: { fontWeight: '700', marginTop: 8, marginBottom: 8, fontSize: 13, color: '#8E8E93', textTransform: 'uppercase' },
+  chip: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, backgroundColor: '#F2F2F7', marginRight: 8 },
+  chipActive: { backgroundColor: '#007AFF' },
+  errorText: { color: '#FF3B30', fontSize: 12, marginTop: 4, fontWeight: '500' },
   checkboxRow: { flexDirection: 'row', alignItems: 'center' },
-  checkbox: { width: 20, height: 20, borderWidth: 1, borderColor: '#ccc', borderRadius: 4 },
-  checkboxActive: { backgroundColor: '#2a7', borderColor: '#2a7' },
-  cardWrapper: { backgroundColor: '#fff', borderRadius: 10, marginBottom: 10, elevation: 2, overflow: 'hidden' },
-  card: { flexDirection: 'row', padding: 10, alignItems: 'center' },
-  actionButtons: { flexDirection: 'row', justifyContent: 'flex-end', borderTopWidth: 1, borderColor: '#eee', padding: 6, backgroundColor: '#fafafa' },
-  actionBtn: { paddingHorizontal: 12, paddingVertical: 4 },
-  actionText: { fontSize: 13, fontWeight: '600', color: '#555' },
-  thumb: { width: 70, height: 70, borderRadius: 8, backgroundColor: '#eee' },
+  checkbox: { width: 22, height: 22, borderWidth: 1.5, borderColor: '#D1D1D6', borderRadius: 6, backgroundColor: '#FFF' },
+  checkboxActive: { backgroundColor: '#007AFF', borderColor: '#007AFF' },
+  cardWrapper: { backgroundColor: '#FFFFFF', borderRadius: 12, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2, overflow: 'hidden' },
+  card: { flexDirection: 'row', padding: 12, alignItems: 'center' },
+  actionButtons: { flexDirection: 'row', justifyContent: 'flex-end', borderTopWidth: 1, borderColor: '#F2F2F7', padding: 8, backgroundColor: '#FFFFFF' },
+  actionBtn: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 6 },
+  actionText: { fontSize: 14, fontWeight: '600', color: '#007AFF' },
+  thumb: { width: 80, height: 80, borderRadius: 10, backgroundColor: '#F2F2F7' },
   thumbPlaceholder: { justifyContent: 'center', alignItems: 'center' },
-  name: { fontSize: 16, fontWeight: '700' },
-  meta: { color: '#666', marginTop: 2 },
-  unavailable: { color: '#c00', marginTop: 2, fontSize: 12 },
-  empty: { textAlign: 'center', marginTop: 30, color: '#888' },
-  fab: { position: 'absolute', right: 16, bottom: 20, backgroundColor: '#2a7', paddingVertical: 12, paddingHorizontal: 18, borderRadius: 24, elevation: 4 },
-  fabText: { color: '#fff', fontWeight: '700' },
-  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalBox: { backgroundColor: '#fff', padding: 20, borderRadius: 10, width: '80%' },
-  modalBtn: { padding: 10, borderRadius: 6, flex: 1, alignItems: 'center' }
+  name: { fontSize: 16, fontWeight: '700', color: '#1C1C1E' },
+  meta: { color: '#8E8E93', marginTop: 4, fontSize: 13 },
+  priceText: { color: '#34C759', marginTop: 6, fontSize: 14, fontWeight: '600' },
+  unavailable: { color: '#FF3B30', marginTop: 6, fontSize: 12, fontWeight: '600' },
+  empty: { textAlign: 'center', marginTop: 40, color: '#8E8E93', fontSize: 15 },
+  fab: { position: 'absolute', right: 20, bottom: 24, backgroundColor: '#007AFF', paddingVertical: 14, paddingHorizontal: 20, borderRadius: 30, shadowColor: '#007AFF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6 },
+  fabText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+  modalBox: { backgroundColor: '#FFFFFF', padding: 24, borderRadius: 16, width: '85%', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
+  modalBtn: { padding: 12, borderRadius: 10, flex: 1, alignItems: 'center' }
 });
