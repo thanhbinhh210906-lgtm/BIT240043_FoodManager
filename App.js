@@ -20,7 +20,6 @@ function RootNavigator() {
   const { t } = useTranslation();
   const { ready } = useApp();
 
-  // === LOGIC TỰ ĐỘNG ĐỒNG BỘ KHI CÓ MẠNG ===
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(async (state) => {
       if (state.isConnected) {
@@ -31,13 +30,20 @@ function RootNavigator() {
             for (const item of queue) {
               const payload = item.payload;
 
+              // Map dữ liệu sang đúng tên field có tiền tố BIT240043_ của MockAPI
+              const apiPayload = {
+                BIT240043_Name: payload[f('Name')],
+                BIT240043_Price: payload[f('Price')],
+                BIT240043_PreparationTime: payload[f('PreparationTime')],
+                BIT240043_IsAvailable: payload[f('IsAvailable')],
+                BIT240043_Description: payload[f('Description')],
+                BIT240043_DishCategoryId: payload[f('DishCategoryId')]
+              };
+
               if (item.action === 'CREATE') {
-                // Xóa ID local đi để MockAPI tự sinh ID mới, tránh trùng lặp
-                const { [f('DishId')]: _, ...apiPayload } = payload; 
                 await createDishApi(apiPayload);
               } else if (item.action === 'UPDATE') {
-                const { [f('DishId')]: id, ...apiPayload } = payload; 
-                await updateDishApi(id, apiPayload);
+                await updateDishApi(payload[f('DishId')], apiPayload);
               } else if (item.action === 'DELETE') {
                 await deleteDishApi(payload[f('DishId')]);
               }
@@ -46,7 +52,7 @@ function RootNavigator() {
             Alert.alert('Sync OK', 'Dữ liệu đã được tự động đồng bộ lên MockAPI!');
           } catch (err) {
             console.log('Lỗi đồng bộ:', err);
-            Alert.alert('Sync Error', 'Không thể kết nối MockAPI. Vui lòng kiểm tra mạng!');
+            Alert.alert('Sync Error', 'Không thể kết nối MockAPI.');
           }
         }
       }
